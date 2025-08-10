@@ -117,9 +117,9 @@ class RuneGoldberg(AbstractDailyDND):
             render_success = True
         except Exception as e:
             log.error('Error rendering as html. Trace: ' + str(e), module=Module.RUNE_GOLD)
-        base: str = '========== Rune Goldberg Report =========='
+        base: str = '== Rune Goldberg Report =='
         runes: List[str] = self._get_daily_runes(html)
         first: str = 'First Rune: ' + runes[0]
         second: str = f'Second Runes: {", ".join(runes[1:])}'
-        end: str = '=========================================='
+        end: str = '======================='
         return f'{base}\n\n{first}\n{second}\n\n\n{end}', {"image": render_success, 'filepath': _generated_filepath}
