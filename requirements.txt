@@ -1,0 +1,7 @@
+html2image
+selenium
+pillow
+APScheduler
+python-dotenv
+loguru
+requests
