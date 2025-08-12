@@ -29,8 +29,9 @@ class Module(Enum):
     LOGGER = 'LOGGER'
     # Add your modules here in the format module_enum: 'module_description'
     MAIN = 'Main Thread'
-    RUNE_GOLD = 'Rune Goldberg Tracker'
     TEL = 'Telegram API'
+    RUNE_GOLD = 'Rune Goldberg Tracker'
+    FLASH_EVENTS = 'Wilderness Flash Events'
 
 
 class LogType(Enum):

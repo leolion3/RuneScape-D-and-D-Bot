@@ -38,10 +38,10 @@ the path to the downloaded folder's `chrome.exe` file. For example: `./chrome-wi
 
 ## Current Events
 
-| D&D Event Name          | Implemented?   |
-|-------------------------|----------------|
-| Rune Goldberg Machine   | Yes            |
-| Wilderness Flash Events | In-Development |
+| D&D Event Name          | Implemented? |
+|-------------------------|--------------|
+| Rune Goldberg Machine   | Yes          |
+| Wilderness Flash Events | Yes          |
 
 More to be added soon
 
