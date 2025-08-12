@@ -1,0 +1,8 @@
+services:
+  rs_bot:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./.env:/app/.env
+    restart: unless-stopped
