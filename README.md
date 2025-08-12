@@ -4,7 +4,24 @@
 This python module allows sending D&D alerts for various D&Ds in
 RuneScape over several social media platforms.
 
-## Setup & Execution
+## Setup (Docker-Compose)
+
+- Download the [`docker-compose.yml`](https://raw.githubusercontent.com/leolion3/RuneScape-D-and-D-Bot/refs/heads/main/docker-compose.yml) file.
+- Download the [`.env.example`](https://raw.githubusercontent.com/leolion3/RuneScape-D-and-D-Bot/refs/heads/main/.env.example) file and rename it to `.env`
+- Adjust the parameters as necessary (see more below). **Ignore the chromium browser path** - this gets set automatically.
+- Pull the docker image:
+
+```bash
+docker pull ghcr.io/leolion3/runescape-d-and-d-bot:latest
+```
+
+- Start the Application with docker compose::
+
+```bash
+sudo docker compose up --build -d
+```
+
+## Setup & Execution (Python3 + Virtual Env)
 
 - Copy the `.env.example` file to the path `.env` and fill the required values.
 - Create the python virtual environment:
