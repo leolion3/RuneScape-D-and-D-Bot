@@ -2,7 +2,7 @@
 import json
 import os.path
 from datetime import datetime, timedelta
-from typing import Dict, Tuple, Any, Generator, Optional, List
+from typing import Dict, Tuple, Any, Optional, List
 from hourly_dnds.abstract_hourly_dnd import AbstractHourlyDND
 from logging_framework.log_handler import log, Module
 
@@ -87,13 +87,13 @@ class WildernessFlashEvents(AbstractHourlyDND):
         return html.split('<table')[1].split('</table')[0]
 
     @staticmethod
-    def _get_table_rows(html_table: str) -> Generator[str]:
+    def _get_table_rows(html_table: str):
         rows = html_table.split('<tr')[:-2]
         for row in rows:
             yield row
 
     @staticmethod
-    def _get_cell(table_row: str) -> Generator[str]:
+    def _get_cell(table_row: str):
         tds = table_row.split('<td')
         for td in tds:
             yield td
