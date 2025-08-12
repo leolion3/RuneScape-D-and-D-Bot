@@ -28,7 +28,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Use GitHub Actions cache for Docker layers
       - name: Cache Docker layers
         uses: actions/cache@v3
         with:
@@ -37,9 +36,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildx-
 
-      - name: Build and push rs_bot image with cache
+      - name: Build and push runescape-d-and-d-bot image with cache
         run: |
-          REPO=ghcr.io/${{ github.repository_owner }}/rs_bot
+          IMAGE_NAME=runescape-d-and-d-bot
+          REPO=ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME
           SHORT_SHA=$(echo "${GITHUB_SHA}" | cut -c1-7)
 
           docker buildx build \
@@ -52,7 +52,6 @@ jobs:
             $( [ "$GITHUB_REF_NAME" = "develop" ] && echo --tag "$REPO:dev" ) \
             --push .
 
-      # Move new cache into place for next build
       - name: Move Docker cache
         run: |
           rm -rf /tmp/.buildx-cache
