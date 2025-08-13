@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import time
 import json
 import os.path
 from datetime import datetime, timedelta
@@ -17,11 +18,18 @@ class WildernessFlashEvents(AbstractHourlyDND):
 
     config_file_path: str = os.path.join(os.path.dirname(__file__), "config.json")
 
+    def _purge_page_before_load() -> None:
+        # Rotations-page tends to get outdated
+        url: str = 'https://runescape.wiki/w/Template:Wilderness_Flash_Events/rotations?action=purge'
+        requests.post(url)
+        time.sleep(2)
+    
     def hourly_exec(self) -> Tuple[str, Dict[str, Any]]:
         """
         Default public facing method.
         :return: a notification for the next wilderness flash event if it is on the favourite list.
         """
+        self._purge_page_before_load()
         html: str = self._base_request()
         flash_events: Dict[str, str] = self._get_events_dictionary(html)
         next_event, event_timestamp = self._get_next_event(flash_events)
