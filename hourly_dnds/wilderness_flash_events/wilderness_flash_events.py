@@ -2,7 +2,7 @@
 import time
 import json
 import os.path
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Tuple, Any, Optional, List
 from hourly_dnds.abstract_hourly_dnd import AbstractHourlyDND
 from logging_framework.log_handler import log, Module
@@ -24,7 +24,7 @@ class WildernessFlashEvents(AbstractHourlyDND):
         url: str = 'https://runescape.wiki/w/Template:Wilderness_Flash_Events/rotations?action=purge'
         requests.post(url)
         time.sleep(2)
-    
+
     def hourly_exec(self) -> Tuple[str, Dict[str, Any]]:
         """
         Default public facing method.
@@ -33,16 +33,19 @@ class WildernessFlashEvents(AbstractHourlyDND):
         self._purge_page_before_load()
         html: str = self._base_request()
         flash_events: Dict[str, str] = self._get_events_dictionary(html)
+        log.debug('Event schedule:', flash_events,
+                  '| Current time:', datetime.now(tz=timezone.utc).strftime("%m/%d/%Y %H:%M:%S"),
+                  module=Module.FLASH_EVENTS)
         next_event, event_timestamp = self._get_next_event(flash_events)
         if self._favourites_only:
             if not self._is_favourite(next_event):
                 log.debug(f'Next flash event is {next_event} '
-                         f'but not on favourite list, skipping notification.', module=Module.FLASH_EVENTS)
+                          f'but not on favourite list, skipping notification.', module=Module.FLASH_EVENTS)
                 return '', {}
             else:
                 log.debug(f'Next flash event is {next_event}, sending notification...',
                           module=Module.FLASH_EVENTS)
-        return f'The next flash event is "{next_event}", starting at {event_timestamp}', {}
+        return f'The next flash event is "{next_event}", starting at {event_timestamp} UTC', {}
 
     def _is_favourite(self, event_name: str) -> bool:
         """
@@ -124,22 +127,22 @@ class WildernessFlashEvents(AbstractHourlyDND):
         return td_txt.split('<small>')[1].split('<')[0]
 
     @staticmethod
-    def _append_event_if_valid(event: Optional[str], time: Optional[str], events: Dict[str, str]) -> None:
-        if event is not None and time is not None:
-            events[event] = time
+    def _append_event_if_valid(event: Optional[str], _time: Optional[str], events: Dict[str, str]) -> None:
+        if event is not None and _time is not None:
+            events[event] = _time
 
     def _get_event_name_and_time(self, td_row: str) -> Tuple[str, str]:
         event = None
-        time = None
+        _time = None
         for td in self._get_cell(td_row):
             if self._is_event_name(td) and event is None:
                 event = self._get_event_name_from_td(td)
                 continue
-            if self._is_event_time(td) and time is None:
-                time = self._get_event_time_from_td(td)
-            if event is not None and time is not None:
+            if self._is_event_time(td) and _time is None:
+                _time = self._get_event_time_from_td(td)
+            if event is not None and _time is not None:
                 break
-        return event, time
+        return event, _time
 
     def _get_events_dictionary(self, html: str) -> Dict[str, str]:
         """
@@ -150,10 +153,10 @@ class WildernessFlashEvents(AbstractHourlyDND):
         events = {}
         table = self._get_events_table(html=html)
         for row in self._get_table_rows(table):
-            event, time = self._get_event_name_and_time(row)
+            event, _time = self._get_event_name_and_time(row)
             self._append_event_if_valid(
                 event=event,
-                time=time,
+                _time=_time,
                 events=events
             )
         return events
@@ -164,10 +167,10 @@ class WildernessFlashEvents(AbstractHourlyDND):
         Gets the next wilderness flash event.
         :return: the name of the next wilderness flash event.
         """
-        now: datetime = datetime.now()
+        now: datetime = datetime.now(tz=timezone.utc)
         for event_name, event_timestamp in events.items():
             event_time = datetime.strptime(event_timestamp, "%H:%M").replace(
-                year=now.year, month=now.month, day=now.day
+                year=now.year, month=now.month, day=now.day, tzinfo=timezone.utc
             )
             if event_time < now:
                 event_time += timedelta(days=1)
