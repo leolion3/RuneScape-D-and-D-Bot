@@ -45,7 +45,7 @@ class WildernessFlashEvents(AbstractHourlyDND):
             else:
                 log.debug(f'Next flash event is {next_event}, sending notification...',
                           module=Module.FLASH_EVENTS)
-        return f'The next flash event is "{next_event}", starting at {event_timestamp} UTC', {}
+        return f'The next flash event is "{next_event}", starting in 30 Minutes at {event_timestamp} UTC', {}
 
     def _is_favourite(self, event_name: str) -> bool:
         """
