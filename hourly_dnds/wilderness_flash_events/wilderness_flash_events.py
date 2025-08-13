@@ -18,6 +18,7 @@ class WildernessFlashEvents(AbstractHourlyDND):
 
     config_file_path: str = os.path.join(os.path.dirname(__file__), "config.json")
 
+    @staticmethod
     def _purge_page_before_load() -> None:
         # Rotations-page tends to get outdated
         url: str = 'https://runescape.wiki/w/Template:Wilderness_Flash_Events/rotations?action=purge'
