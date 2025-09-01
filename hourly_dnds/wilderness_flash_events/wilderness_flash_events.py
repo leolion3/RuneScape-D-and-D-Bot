@@ -3,6 +3,7 @@ import time
 import json
 import os.path
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 from typing import Dict, Tuple, Any, Optional, List
 from hourly_dnds.abstract_hourly_dnd import AbstractHourlyDND
 from logging_framework.log_handler import log, Module
@@ -18,24 +19,90 @@ class WildernessFlashEvents(AbstractHourlyDND):
 
     config_file_path: str = os.path.join(os.path.dirname(__file__), "config.json")
 
+    START_EPOCH_MS: int = 1754542800000
+    FULL_PERIOD_HOURS: int = 14
+    ITEM_PERIOD_HOURS: int = 1
+
+    ROTATION: List[str] = [
+        "Spider Swarm",
+        "Unnatural Outcrop",
+        "Stryke the Wyrm",
+        "Demon Stragglers",
+        "Butterfly Swarm",
+        "King Black Dragon Rampage",
+        "Forgotten Soldiers",
+        "Surprising Seedlings",
+        "Hellhound Pack",
+        "Infernal Star",
+        "Lost Souls",
+        "Ramokee Incursion",
+        "Displaced Energy",
+        "Evil Bloodwood Tree",
+    ]
+
+    def _get_events_dictionary(self) -> Dict[str, str]:
+        """
+        Build rotation from the fixed start timestamp.
+        Returns a dictionary of event → next occurrence (UTC, %H:%M).
+        """
+        events: Dict[str, str] = {}
+
+        start_time = datetime.fromtimestamp(self.START_EPOCH_MS / 1000, tz=timezone.utc)
+        now = datetime.now(timezone.utc)
+
+        for i, name in enumerate(self.ROTATION):
+            # time of this event in the very first cycle
+            event_time = start_time + timedelta(hours=i * self.ITEM_PERIOD_HOURS)
+
+            # compute how many full cycles have passed since anchor
+            elapsed = now - event_time
+            cycles = int(elapsed.total_seconds() // (self.FULL_PERIOD_HOURS * 3600))
+            if elapsed.total_seconds() % (self.FULL_PERIOD_HOURS * 3600) != 0:
+                cycles += 1
+
+            # roll forward to the next occurrence
+            next_time = event_time + timedelta(hours=cycles * self.FULL_PERIOD_HOURS)
+            events[name] = next_time.strftime("%H:%M")
+
+        return events
+
     @staticmethod
-    def _purge_page_before_load() -> None:
-        # Rotations-page tends to get outdated
-        url: str = 'https://runescape.wiki/w/Template:Wilderness_Flash_Events/rotations?action=purge'
-        requests.post(url)
-        time.sleep(2)
+    def _get_next_event(events: Dict[str, str]) -> Tuple[str, str]:
+        """
+        Get the next wilderness flash event.
+        """
+        now = datetime.now(timezone.utc)
+        for event_name, event_timestamp in events.items():
+            event_time = datetime.strptime(event_timestamp, "%H:%M").replace(
+                year=now.year, month=now.month, day=now.day, tzinfo=timezone.utc
+            )
+            if event_time < now:
+                event_time += timedelta(days=1)
+            if now <= event_time <= now + timedelta(hours=1):
+                return event_name, event_timestamp
+        raise Exception("Could not fetch next wilderness flash event.")
+
+    def print_all_events(self) -> None:
+        """
+        Print all upcoming events in human-readable format (UTC).
+        """
+        events = self._get_events_dictionary()
+        print("Upcoming Wilderness Flash Events (UTC):")
+        for name, ts in events.items():
+            print(f"- {name}: {ts.strftime('%Y-%m-%d %H:%M:%S %Z')}")
 
     def hourly_exec(self) -> Tuple[str, Dict[str, Any]]:
         """
         Default public facing method.
         :return: a notification for the next wilderness flash event if it is on the favourite list.
         """
-        self._purge_page_before_load()
-        html: str = self._base_request()
-        flash_events: Dict[str, str] = self._get_events_dictionary(html)
-        log.debug('Event schedule:', flash_events,
-                  '| Current time:', datetime.now(tz=timezone.utc).strftime("%m/%d/%Y %H:%M:%S"),
-                  module=Module.FLASH_EVENTS)
+        flash_events: Dict[str, str] = self._get_events_dictionary()
+        log.debug(
+            'Event schedule:', flash_events,
+            '| Current time:', datetime.now(tz=timezone.utc).strftime("%m/%d/%Y %H:%M:%S"),
+            module=Module.FLASH_EVENTS
+        )
+
         next_event, event_timestamp = self._get_next_event(flash_events)
         if self._favourites_only:
             if not self._is_favourite(next_event):
@@ -45,7 +112,24 @@ class WildernessFlashEvents(AbstractHourlyDND):
             else:
                 log.debug(f'Next flash event is {next_event}, sending notification...',
                           module=Module.FLASH_EVENTS)
-        return f'The next flash event is "{next_event}", starting in 30 Minutes at {event_timestamp} UTC', {}
+
+        # --- compute accurate countdown ---
+        now_utc = datetime.now(tz=timezone.utc)
+        cet = ZoneInfo("Europe/Berlin")
+        event_time_utc = datetime.strptime(event_timestamp, "%H:%M").replace(
+            year=now_utc.year, month=now_utc.month, day=now_utc.day, tzinfo=timezone.utc
+        )
+        if event_time_utc < now_utc:
+            event_time_utc += timedelta(days=1)
+
+        event_time_cet = event_time_utc.astimezone(cet)
+        now_cet = now_utc.astimezone(cet)
+        delta_minutes = int((event_time_cet - now_cet).total_seconds() // 60)
+        log.debug(
+            f'Next flash event is {next_event}, sending notification in {delta_minutes} minutes...',
+            module=Module.FLASH_EVENTS
+        )
+        return f'The next flash event is "{next_event}", starting in {delta_minutes} minutes at {event_time_cet.strftime("%H:%M")} CET', {}
 
     def _is_favourite(self, event_name: str) -> bool:
         """
@@ -81,103 +165,9 @@ class WildernessFlashEvents(AbstractHourlyDND):
             self._favourites: List[str] = self._load_config_file()
 
     @staticmethod
-    def _base_request() -> str:
-        """
-        Base request to fetch upcoming events from rs wiki.
-        :return: the html code.
-        """
-        url = 'https://runescape.wiki/w/Template:Wilderness_Flash_Events/rotations'
-        return requests.get(url).text
-
-    @staticmethod
-    def _get_events_table(html: str) -> str:
-        """
-        Get the wilderness flash events table from the rs wiki.
-        :param html: the wiki html code.
-        :return: the html table's content as a string.
-        """
-        return html.split('<table')[1].split('</table')[0]
-
-    @staticmethod
-    def _get_table_rows(html_table: str):
-        rows = html_table.split('<tr')[:-2]
-        for row in rows:
-            yield row
-
-    @staticmethod
-    def _get_cell(table_row: str):
-        tds = table_row.split('<td')
-        for td in tds:
-            yield td
-
-    @staticmethod
-    def _is_event_name(td_txt: str) -> bool:
-        return '</a>' in td_txt
-
-    @staticmethod
-    def _get_event_name_from_td(td_txt: str) -> str:
-        return td_txt.split('</a>')[0].split('>')[2]
-
-    @staticmethod
-    def _is_event_time(td_txt: str) -> bool:
-        return '<small>' in td_txt
-
-    @staticmethod
-    def _get_event_time_from_td(td_txt: str) -> str:
-        return td_txt.split('<small>')[1].split('<')[0]
-
-    @staticmethod
     def _append_event_if_valid(event: Optional[str], _time: Optional[str], events: Dict[str, str]) -> None:
         if event is not None and _time is not None:
             events[event] = _time
-
-    def _get_event_name_and_time(self, td_row: str) -> Tuple[str, str]:
-        event = None
-        _time = None
-        for td in self._get_cell(td_row):
-            if self._is_event_name(td) and event is None:
-                event = self._get_event_name_from_td(td)
-                continue
-            if self._is_event_time(td) and _time is None:
-                _time = self._get_event_time_from_td(td)
-            if event is not None and _time is not None:
-                break
-        return event, _time
-
-    def _get_events_dictionary(self, html: str) -> Dict[str, str]:
-        """
-        Get a dictionary of upcoming wilderness flash events mapped to timestamps.
-        :param html: the html code from the rs wiki.
-        :return: a dictionary mapping of each event to its upcoming time.
-        """
-        events = {}
-        table = self._get_events_table(html=html)
-        for row in self._get_table_rows(table):
-            event, _time = self._get_event_name_and_time(row)
-            self._append_event_if_valid(
-                event=event,
-                _time=_time,
-                events=events
-            )
-        return events
-
-    @staticmethod
-    def _get_next_event(events: Dict[str, str]) -> Tuple[str, str]:
-        """
-        Gets the next wilderness flash event.
-        :return: the name of the next wilderness flash event.
-        """
-        now: datetime = datetime.now(tz=timezone.utc)
-        for event_name, event_timestamp in events.items():
-            event_time = datetime.strptime(event_timestamp, "%H:%M").replace(
-                year=now.year, month=now.month, day=now.day, tzinfo=timezone.utc
-            )
-            if event_time < now:
-                event_time += timedelta(days=1)
-            if now <= event_time <= now + timedelta(hours=1):
-                return event_name, event_timestamp
-        log.error('Error fetching next flash event. No event found.', module=Module.FLASH_EVENTS)
-        raise Exception('Could not fetch next wilderness flash event.')
 
 
 if __name__ == '__main__':
