@@ -27,3 +27,4 @@ if telegram_enabled:
 
 # Event Specific
 wilderness_flash_events_favourites_only: bool = os.getenv('FLASH_EVENTS_FAVOURITES_ONLY', 'false').lower() == 'true'
+wilderness_flash_events_images_enabled: bool = os.getenv('FLASH_EVENTS_IMAGES_ENABLED', 'true').lower() == 'true'

@@ -18,27 +18,28 @@ class WildernessFlashEvents(AbstractHourlyDND):
     """
 
     config_file_path: str = os.path.join(os.path.dirname(__file__), "config.json")
+    _maps_filepath: str = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'maps')
 
     START_EPOCH_MS: int = 1754542800000
     FULL_PERIOD_HOURS: int = 14
     ITEM_PERIOD_HOURS: int = 1
 
-    ROTATION: List[str] = [
-        "Spider Swarm",
-        "Unnatural Outcrop",
-        "Stryke the Wyrm",
-        "Demon Stragglers",
-        "Butterfly Swarm",
-        "King Black Dragon Rampage",
-        "Forgotten Soldiers",
-        "Surprising Seedlings",
-        "Hellhound Pack",
-        "Infernal Star",
-        "Lost Souls",
-        "Ramokee Incursion",
-        "Displaced Energy",
-        "Evil Bloodwood Tree",
-    ]
+    ROTATION: Dict[str, str] = {
+        "Spider Swarm": "spider_swarm.png",
+        "Unnatural Outcrop": "unnatural_outcrop.png",
+        "Stryke the Wyrm": "strike_the_wyrm.png",
+        "Demon Stragglers": "demon_stragglers.png",
+        "Butterfly Swarm": "butterfly_swarm.png",
+        "King Black Dragon Rampage": "king_black_dragon_rampage.png",
+        "Forgotten Soldiers": "forgotten_soldiers.png",
+        "Surprising Seedlings": "surprising_seedlings.png",
+        "Hellhound Pack": "hellhound_pack.png",
+        "Infernal Star": "infernal_star.png",
+        "Lost Souls": "lost_souls.png",
+        "Ramokee Incursion": "ramokee_incursion.png",
+        "Displaced Energy": "displaced_energy.png",
+        "Evil Bloodwood Tree": "evil_bloodwood_tree.png",
+    }
 
     def _get_events_dictionary(self) -> Dict[str, str]:
         """
@@ -50,7 +51,7 @@ class WildernessFlashEvents(AbstractHourlyDND):
         start_time = datetime.fromtimestamp(self.START_EPOCH_MS / 1000, tz=timezone.utc)
         now = datetime.now(timezone.utc)
 
-        for i, name in enumerate(self.ROTATION):
+        for i, name in enumerate(self.ROTATION.keys()):
             # time of this event in the very first cycle
             event_time = start_time + timedelta(hours=i * self.ITEM_PERIOD_HOURS)
 
@@ -129,7 +130,11 @@ class WildernessFlashEvents(AbstractHourlyDND):
             f'Next flash event is {next_event}, sending notification in {delta_minutes} minutes...',
             module=Module.FLASH_EVENTS
         )
-        return f'The next flash event is "{next_event}", starting in {delta_minutes} minutes at {event_time_cet.strftime("%H:%M")} CET', {}
+        metadata = {}
+        filepath: str = os.path.join(self._maps_filepath, self.ROTATION.get(next_event))
+        if self._use_images and os.path.exists(filepath):
+            metadata = {"image": True, 'filepath': filepath}
+        return f'The next flash event is "{next_event}", starting in {delta_minutes} minutes at {event_time_cet.strftime("%H:%M")} CET', metadata
 
     def _is_favourite(self, event_name: str) -> bool:
         """
@@ -161,6 +166,7 @@ class WildernessFlashEvents(AbstractHourlyDND):
         Default constructor.
         """
         self._favourites_only: bool = config.wilderness_flash_events_favourites_only
+        self._use_images: bool = config.wilderness_flash_events_images_enabled
         if self._favourites_only:
             self._favourites: List[str] = self._load_config_file()
 
