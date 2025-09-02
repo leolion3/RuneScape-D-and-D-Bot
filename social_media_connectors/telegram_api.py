@@ -19,13 +19,14 @@ class TelegramAPI(AbstractSocialMediaAdapter):
         :param flags: optional flags containing attachments.
         :return:
         """
-        requests.get(self._telegram_chat_url + message)
         if not ('image' in flags.keys() and flags['image']):
+            requests.get(self._telegram_chat_url + message)
             return
         filepath: str = flags['filepath']
         image_data: Optional[bytes] = open(filepath, 'rb').read()
         files = {
-            'photo': image_data
+            'photo': image_data,
+            'caption': message,
         }
         data = {
             'chat_id': self._chat_id
