@@ -25,11 +25,11 @@ class TelegramAPI(AbstractSocialMediaAdapter):
         filepath: str = flags['filepath']
         image_data: Optional[bytes] = open(filepath, 'rb').read()
         files = {
-            'photo': image_data,
-            'caption': message,
+            'photo': image_data
         }
         data = {
-            'chat_id': self._chat_id
+            'chat_id': self._chat_id,
+            'caption': message
         }
         r = requests.post(self._telegram_attachment_url, files=files, data=data)
         if r.status_code != 200:
