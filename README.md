@@ -58,8 +58,8 @@ the path to the downloaded folder's `chrome.exe` file. For example: `./chrome-wi
 
 | D&D Event Name (Link)   | Implemented? |
 |-------------------------|--------------|
-| [Rune Goldberg Machine](https://github.com/leolion3/RuneScape-D-and-D-Bot/tree/main/hourly_dnds/wilderness_flash_events)   | Yes          |
-| [Wilderness Flash Events](https://github.com/leolion3/RuneScape-D-and-D-Bot/tree/main/daily_dnds/rune_goldberg) | Yes          |
+| [Rune Goldberg Machine](https://github.com/leolion3/RuneScape-D-and-D-Bot/tree/main/daily_dnds/rune_goldberg)   | Yes          |
+| [Wilderness Flash Events](https://github.com/leolion3/RuneScape-D-and-D-Bot/tree/main/hourly_dnds/wilderness_flash_events) | Yes          |
 
 More to be added soon
 
