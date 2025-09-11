@@ -37,3 +37,9 @@ To enable or disable any of the events, simply remove them from the list and
 restart the application.
 
 > **The default list of favourite events are those that grant very wildy rewards.**
+
+## Demo
+
+The picture below represents a message sent with the Telegram Adapter
+
+![Demo Image](https://raw.githubusercontent.com/leolion3/RuneScape-D-D-Bot/master/_html/flash_events.jpg)

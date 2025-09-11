@@ -56,10 +56,10 @@ the path to the downloaded folder's `chrome.exe` file. For example: `./chrome-wi
 
 ## Current Events
 
-| D&D Event Name          | Implemented? |
+| D&D Event Name (Link)   | Implemented? |
 |-------------------------|--------------|
-| Rune Goldberg Machine   | Yes          |
-| Wilderness Flash Events | Yes          |
+| [Rune Goldberg Machine](https://github.com/leolion3/RuneScape-D-and-D-Bot/tree/main/hourly_dnds/wilderness_flash_events)   | Yes          |
+| [Wilderness Flash Events](https://github.com/leolion3/RuneScape-D-and-D-Bot/tree/main/daily_dnds/rune_goldberg) | Yes          |
 
 More to be added soon
 
@@ -69,7 +69,7 @@ More to be added soon
 |-----------------------|----------------|
 | Telegram              | Yes            |
 | Discord               | In-Development |
-| WhatsApp              | Planned        |
+| WhatsApp              | Not yet        |
 | Signal                | Maybe          |
 
 ## Collaboration
