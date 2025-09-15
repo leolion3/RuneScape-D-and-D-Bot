@@ -28,7 +28,7 @@ def _check_flags_and_notify(event_name: str, message: str, flags: Dict[str, Any]
     if not len(message.split()):
         log.info(f'Event {event_name} did not return a notification. Skipping.', module=Module.MAIN)
     for adapter in social_media_adapters:
-        adapter.notify(message=message, flags=flags)
+        adapter.notify(message=message, flags=flags, delete_previous_key=event_name)
 
 
 def daily_schedule() -> None:
