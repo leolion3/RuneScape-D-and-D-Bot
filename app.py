@@ -25,8 +25,9 @@ social_media_adapters: List[AbstractSocialMediaAdapter] = [
 
 
 def _check_flags_and_notify(event_name: str, message: str, flags: Dict[str, Any]):
-    if not len(message.split()):
+    if message is None or not len(message.strip()):
         log.info(f'Event {event_name} did not return a notification. Skipping.', module=Module.MAIN)
+        return
     for adapter in social_media_adapters:
         adapter.notify(message=message, flags=flags, delete_previous_key=event_name)
 
