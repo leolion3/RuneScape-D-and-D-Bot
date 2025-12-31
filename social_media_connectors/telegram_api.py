@@ -74,10 +74,10 @@ class TelegramAPI(AbstractSocialMediaAdapter):
         """
         self._api_key: str = config.telegram_api_key
         self._chat_id: str = config.telegram_chat_id
-        self._telegram_attachment_url: str = f"https://api.telegram.org/bot{self._api_key}/sendPhoto"
-        self._telegram_chat_url: str = (f"https://api.telegram.org/bot{self._api_key}/sendMessage"
+        self._telegram_attachment_url: str = f"https://{config.telegram_base_url}/bot{self._api_key}/sendPhoto"
+        self._telegram_chat_url: str = (f"https://{config.telegram_base_url}/bot{self._api_key}/sendMessage"
                                         f"?chat_id={self._chat_id}&text=")
-        self._telegram_delete_url: str = f"https://api.telegram.org/bot{self._api_key}/deleteMessage"
+        self._telegram_delete_url: str = f"https://{config.telegram_base_url}/bot{self._api_key}/deleteMessage"
         self._deletable_message_dict: Dict[str, List[int]] = {}
 
 

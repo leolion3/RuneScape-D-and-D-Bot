@@ -18,12 +18,17 @@ if os.name == "nt":
 telegram_api_key: Optional[str] = None
 telegram_chat_id: Optional[str] = None
 telegram_enabled = os.getenv('TELEGRAM_ENABLED', 'false').lower() == 'true'
+telegram_base_url = "api.telegram.org"
+telegram_proxy_enabled = os.getenv('TELEGRAM_PROXY_ENABLED', 'false').lower() == 'true'
+
 if telegram_enabled:
     telegram_api_key = os.getenv('TELEGRAM_API_KEY')
     telegram_chat_id = os.getenv('TELEGRAM_CHAT_ID')
     if not len(telegram_api_key) or not len(telegram_chat_id):
         log.error('Telegram API Key and Chat ID are required if telegram is enabled. Disabling telegram api.')
         telegram_enabled = False
+    if telegram_proxy_enabled:
+        telegram_base_url = os.getenv('TELEGRAM_PROXY_URL', 'api.telegram.org')
 
 # Event Specific
 wilderness_flash_events_favourites_only: bool = os.getenv('FLASH_EVENTS_FAVOURITES_ONLY', 'false').lower() == 'true'

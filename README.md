@@ -36,6 +36,7 @@ source ./.venv/bin/activate
 
 # Install requirements
 pip3 install -r requirements.txt --no-cache
+python3 -m playwright install
 
 # Run app
 python3 app.py
@@ -44,15 +45,17 @@ python3 app.py
 This start a blocking scheduler from `APScheduler` which searches for D&D data
 on a daily and hourly schedule and sends messages accordingly.
 
-## HTML Renderer
+## Telegram Proxy
 
-Some modules offer an optional HTML Renderer for sending images.
-To enable this, a chromium driver must be installed.
+Since Telegram may be blocked in some countries or regions,
+the notifications can be sent through a proxy (Using Cloudflare workers,
+servers or similar). To configure the proxy, set the following variables
+in the `.env` file:
 
-In linux, it is enough to install the chromium browser and set `CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser`.
-
-In Windows, please download a chrome demo browser from `https://googlechromelabs.github.io/chrome-for-testing` and set
-the path to the downloaded folder's `chrome.exe` file. For example: `./chrome-win32/chrome.exe`.
+```
+TELEGRAM_PROXY_ENABLED="true"
+TELEGRAM_PROXY_URL="your.proxy.dns"  # Must proxy/redirect to api.telegram.org 
+```
 
 ## Current Events
 
