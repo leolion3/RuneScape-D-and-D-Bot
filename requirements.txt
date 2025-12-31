@@ -1,5 +1,6 @@
-html2image
-selenium
+playwright>=1.44
+pillow
+requests
 pillow
 APScheduler
 python-dotenv

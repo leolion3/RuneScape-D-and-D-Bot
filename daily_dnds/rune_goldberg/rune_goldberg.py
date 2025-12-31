@@ -6,7 +6,7 @@ import uuid
 import requests
 from PIL import Image
 from typing import List, Tuple, Any, Dict
-from html2image import Html2Image
+from playwright.sync_api import sync_playwright
 
 import config
 from logging_framework.log_handler import log, Module
@@ -84,15 +84,12 @@ class RuneGoldberg(AbstractDailyDND):
         global _generated_filepath
         output_path = uuid.uuid4().hex + os.path.basename(_generated_filepath)
         new_html: str = self._get_html_table(html=html)
-        if config.linux_tmp_path_hti:
-            hti = Html2Image(size=(600, 400), browser_executable=config.chromium_executable_path, temp_path='./tmp',
-                             custom_flags=['--headless=new', '--virtual-time-budget=10000', '--hide-scrollbars',
-                                           '--no-sandbox', '--verbose'])
-        else:
-            hti = Html2Image(size=(600, 400), browser_executable=config.chromium_executable_path,
-                             custom_flags=['--headless=new', '--virtual-time-budget=10000', '--hide-scrollbars',
-                                           '--no-sandbox', '--verbose'])
-        hti.screenshot(html_str=new_html, save_as=output_path)
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True, args=["--no-sandbox", "--disable-gpu", "--disable-dev-shm-usage"])
+            page = browser.new_page(viewport={"width": 600, "height": 400}, device_scale_factor=1)
+            page.set_content(new_html)
+            page.screenshot(path=output_path, full_page=False)
+            browser.close()
         img = Image.open(output_path)
         width, _ = img.size
         crop_width, crop_height = 498, 198
